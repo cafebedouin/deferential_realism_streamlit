@@ -32,7 +32,7 @@ def generate_prolog_scenario(user_input, prompt_text, template_text, linter_code
     system_instruction = f"{prompt_text}\n\nTEMPLATE:\n{template_text}\n\nLINTER RULES:\n{linter_code}"
 
     response = client.models.generate_content(
-        model="gemini-1.5-flash",
+        model="gemini-2.0-flash",
         config={'system_instruction': system_instruction},
         contents=f"Generate a valid .pl scenario for: {user_input}"
     )
@@ -65,7 +65,7 @@ def generate_essay(scenario_pl, prolog_output, uke_w_protocol):
     user_content = f"SCENARIO_CODE:\n{scenario_pl}\n\nPROLOG_AUDIT_OUTPUT:\n{prolog_output}"
 
     response = client.models.generate_content(
-        model="gemini-1.5-flash",
+        model="gemini-2.0-flash",
         config={'system_instruction': system_instruction},
         contents=user_content
     )
