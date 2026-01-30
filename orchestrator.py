@@ -7,10 +7,10 @@ from google.genai import types
 class DRAuditOrchestrator:
     """
     Orchestrates the Deferential Realism audit pipeline using Gemini 2.0.
-    Integrates UKE protocols with Prolog logic verification.
+    Standardized for the 2026 google-genai SDK.
     """
     def __init__(self, api_key):
-        # Initialize the modern Client (v2.0 SDK standard)
+        # The Client is now the single entry point for all API calls
         self.client = genai.Client(api_key=api_key)
 
         # Load local protocol assets from the filesystem
@@ -30,13 +30,13 @@ class DRAuditOrchestrator:
         return ""
 
     def run_pipeline(self, raw_input):
-        # Step 1: Substrate Extraction (UKE_D Protocol)
+        # Step 1: Substrate Extraction (UKE_D)
         substrate = self._gemini_call(
             system_instruction=self.protocols["uke_d"],
             user_content=f"Extract all hard anchors from this data: {raw_input}"
         )
 
-        # Step 2: Pattern Flagging (UKE_C Protocol)
+        # Step 2: Pattern Flagging (UKE_C)
         patterns = self._gemini_call(
             system_instruction=self.protocols["uke_c"],
             user_content=f"Flag the structural patterns in this substrate: {substrate}"
@@ -51,7 +51,7 @@ class DRAuditOrchestrator:
         # Step 4: Logic Audit (Prolog Execution)
         audit_output = self._execute_prolog(scenario_pl)
 
-        # Step 5: Final Synthesis (UKE_W Protocol)
+        # Step 5: Final Synthesis (UKE_W)
         essay = self._gemini_call(
             system_instruction=self.protocols["uke_w"],
             user_content=f"SUBSTRATE: {substrate}\nAUDIT_LOG: {audit_output}\nSCENARIO_CODE: {scenario_pl}"
@@ -59,7 +59,7 @@ class DRAuditOrchestrator:
         return essay
 
     def _gemini_call(self, system_instruction, user_content):
-        """Standardized call to Gemini 2.0 Flash using modern SDK syntax."""
+        """Modern SDK syntax for system instructions."""
         response = self.client.models.generate_content(
             model='gemini-2.0-flash',
             contents=user_content,
@@ -71,19 +71,17 @@ class DRAuditOrchestrator:
         return response.text
 
     def _execute_prolog(self, pl_code):
-        """Executes the generated Prolog code and returns the audit results."""
+        """Standardized subprocess call for logic auditing."""
         temp_file = "temp_scenario.pl"
         with open(temp_file, "w", encoding="utf-8") as f:
             f.write(pl_code)
 
         try:
-            # Calls SWI-Prolog with the specified audit goal
             cmd = ["swipl", "-q", "-s", temp_file, "-g", "run_audit", "-t", "halt"]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
             return result.stdout if result.returncode == 0 else result.stderr
         except Exception as e:
             return f"Prolog Execution Error: {str(e)}"
         finally:
-            # Ensure the temporary file is deleted
             if os.path.exists(temp_file):
                 os.remove(temp_file)
