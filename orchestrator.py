@@ -52,9 +52,11 @@ class DRAuditOrchestrator:
     def run_pipeline(self, raw_input, max_retries=2):
         # Step 1: Substrate Extraction
         substrate = self._gemini_call(self.protocols["uke_d"], f"Extract anchors: {raw_input}")
+        time.sleep(1)  # Pacing delay
 
         # Step 2: Pattern Flagging
         patterns = self._gemini_call(self.protocols["uke_c"], f"Flag patterns: {substrate}")
+        time.sleep(1)  # Pacing delay
 
         # Step 3: Iterative Scenario Generation
         scenario_pl = None
@@ -78,12 +80,14 @@ class DRAuditOrchestrator:
             error_feedback = linter_errors
             current_attempt += 1
             st.warning(f"Linter detected issues (Attempt {current_attempt}/{max_retries}). Retrying...")
+            time.sleep(1)  # Pacing delay before retry
 
         if linter_errors:
             return f"### ❌ Linter Failed after {max_retries} retries\n\n{linter_errors}"
 
         # Step 5: Logic Audit
         audit_output = self._execute_prolog(scenario_pl)
+        time.sleep(1)  # Pacing delay before final synthesis
 
         # Step 6: Final Synthesis
         essay = self._gemini_call(
