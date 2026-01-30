@@ -37,30 +37,46 @@ def lint_prolog(content):
 def generate_prolog_scenario(user_input, prompt_text, template_text, linter_code):
     system_prompt = f"{prompt_text}\n\nTEMPLATE:\n{template_text}\n\nLINTER RULES:\n{linter_code}"
 
-    response = client.chat.completions.create(
-        model="gpt-4-turbo-preview",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Generate a valid .pl scenario for: {user_input}"}
-        ],
-        temperature=0.2
-    )
-    return response.choices[0].message.content
+    # Use the 'model' you initialized at the top of the file
+    response = model.generate_content(f"SYSTEM: {system_prompt}\n\nUSER: Generate a valid .pl scenario for: {user_input}")
+    return response.text
 
 # --- STEP 2: Execution ---
 def run_prolog_audit(scenario_pl):
-    # This assumes 'prolog.txt' logic and dependencies are in the local directory
+    # 1. Extract the interval ID (the unique name of the scenario)
+    # The engine needs this to know WHICH interval to audit.
+    # Looking for: narrative_ontology:interval(portugal_government_stability_ad, ...)
+    match = re.search(r"narrative_ontology:interval\(([^,]+),", scenario_pl)
+    interval_id = match.group(1) if match else "generated_scenario"
+
+    # 2. Save the AI-generated scenario to a temporary file
     with tempfile.NamedTemporaryFile(suffix=".pl", mode="w", delete=False) as tmp:
         tmp.write(scenario_pl)
         tmp_path = tmp.name
 
     try:
-        # Command to run the scenario through SWI-Prolog
-        # Adjust the goal ('run_scenario') based on your specific engine entry point
-        cmd = ["swipl", "-q", "-s", tmp_path, "-g", "run_audit_logic", "-t", "halt"]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-        return result.stdout if result.returncode == 0 else result.stderr
+        # 3. Construct the goal. Note the single quotes for the path and ID.
+        # We load 'stack.pl' first, then run 'run_scenario'.
+        goal = f"run_scenario('{tmp_path}', '{interval_id}')."
+
+        cmd = [
+            "swipl",
+            "-q",                    # Quiet mode
+            "-s", "stack.pl",         # Load your main engine
+            "-g", goal,               # Execute the specific audit goal
+            "-t", "halt"              # Halt after finishing
+        ]
+
+        # 4. Run the process
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+
+        if result.returncode == 0:
+            return result.stdout
+        else:
+            return f"Prolog Error:\n{result.stderr}\nOutput so far:\n{result.stdout}"
+
     finally:
+        # Cleanup the temp file
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
 
