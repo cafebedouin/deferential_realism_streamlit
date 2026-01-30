@@ -494,7 +494,7 @@ drift_severity(C, metric_substitution, Severity) :-
     (   safe_metric(C, theater_ratio, TR), TR > 0.7
     ->  Severity = critical
     ;   Severity = warning
-    ).
+    ), !.
 
 drift_severity(_, function_obsolescence, watch).
 

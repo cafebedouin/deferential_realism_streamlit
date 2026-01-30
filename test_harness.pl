@@ -21,8 +21,8 @@
 
 % Run all registered test cases from validation_suite, or fall back to single ID
 run_all_tests :-
-    (   current_predicate(validation_suite:test_case/2)
-    ->  findall(ID, validation_suite:test_case(_, ID), IDs),
+    (   current_predicate(validation_suite:test_case/4)
+    ->  findall(ID, validation_suite:test_case(_, ID, _, _), IDs),
         sort(IDs, UniqueIDs),
         length(UniqueIDs, N),
         format('~n>>> Running ~w registered test intervals~n', [N]),

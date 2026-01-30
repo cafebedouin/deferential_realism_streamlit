@@ -66,11 +66,13 @@
     requires_active_enforcement/1, 
     emerges_naturally/1.
 
-% Provide a 'fail-safe' default clause to satisfy the compiler
-base_extractiveness(_, 0.0) :- fail.
-suppression_score(_, 0.0) :- fail.
-requires_active_enforcement(_) :- fail.
-emerges_naturally(_) :- fail.
+% Delegate to domain_priors as the canonical source of truth.
+% Multifile declarations above allow testsets to contribute directly,
+% but v3.4 testsets assert into domain_priors: namespace, so we bridge here.
+base_extractiveness(C, V) :- domain_priors:base_extractiveness(C, V).
+suppression_score(C, V) :- domain_priors:suppression_score(C, V).
+requires_active_enforcement(C) :- domain_priors:requires_active_enforcement(C).
+emerges_naturally(C) :- domain_priors:emerges_naturally(C).
 
 % Re-export indexed classification predicates from constraint_indexing
 :- reexport(constraint_indexing, [

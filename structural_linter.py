@@ -45,4 +45,24 @@ def lint_file(filepath):
         if val > 0.46 and "omega_variable(" not in content:
             errors.append("MISSING_OMEGA: High-extraction constraints (> 0.46) require omega_variable/5.")
 
+    # 6. TEMPORAL MEASUREMENT DATA (LIFECYCLE DRIFT)
+    if ext_match:
+        val = float(ext_match.group(1))
+        if val > 0.46:
+            has_measurements = re.search(r'narrative_ontology:measurement\(', content)
+            if not has_measurements:
+                errors.append(
+                    f"MISSING_TEMPORAL_DATA: Extraction {val} > 0.46 requires "
+                    "narrative_ontology:measurement/5 facts for drift detection. "
+                    "Add at least 3 time points for theater_ratio and base_extractiveness."
+                )
+            else:
+                # Check for minimum time point coverage
+                measurement_count = len(re.findall(r'narrative_ontology:measurement\(', content))
+                if measurement_count < 6:
+                    errors.append(
+                        f"INSUFFICIENT_TEMPORAL_DATA: Found {measurement_count} measurement(s), "
+                        "need at least 6 (3 time points x 2 metrics: theater_ratio, base_extractiveness)."
+                    )
+
     return errors

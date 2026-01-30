@@ -264,8 +264,61 @@ perspectival_gap_audit(C) :-
     (constraint_indexing:constraint_classification(C, TypeI, context(agent_power(institutional), _, _, _)) -> true ; TypeI = none),
     (TypeP == mountain, TypeI == rope -> format('    ! GAP: Institutional "Rope" appears as "Mountain" to Powerless.~n') ; true),
     (TypeP == snare, TypeI == rope -> format('    ! ALERT: Extractive "Snare" is masked as functional "Rope".~n') ; true),
-    format('    - Individual (Powerless): ~w~n', [TypeP]),
-    format('    - Institutional (Manager): ~w~n', [TypeI]).
+    % Display with chi power-scaling annotations
+    format_perspective_line(C, individual_powerless, 'Individual (Powerless)', TypeP),
+    format_perspective_line(C, institutional, 'Institutional (Manager)', TypeI),
+    % Display Mandatrophy gap if perspectives differ
+    (   TypeP \= none, TypeI \= none, TypeP \= TypeI
+    ->  format_mandatrophy_gap(C, individual_powerless, institutional)
+    ;   true
+    ).
+
+%% format_perspective_line(+C, +ContextPower, +Label, +Type)
+%  Prints a perspective line with chi annotation if data available.
+format_perspective_line(C, ContextPower, Label, Type) :-
+    (   compute_chi(C, ContextPower, BaseE, Modifier, RawChi)
+    ->  (   RawChi > 1.0
+        ->  format(atom(Ann), ' [chi = ~2f x ~2f = ~2f -> capped 1.00]', [BaseE, Modifier, RawChi])
+        ;   RawChi < 0
+        ->  format(atom(Ann), ' [chi = ~2f x ~2f = ~2f -> net benefit]', [BaseE, Modifier, RawChi])
+        ;   format(atom(Ann), ' [chi = ~2f x ~2f = ~2f]', [BaseE, Modifier, RawChi])
+        )
+    ;   Ann = ''
+    ),
+    format('    - ~w: ~w ~w~n', [Label, Type, Ann]).
+
+%% compute_chi(+C, +ContextPower, -BaseE, -Modifier, -RawChi)
+%  Computes raw chi = BaseE * Modifier for a given power position.
+compute_chi(C, ContextPower, BaseE, Modifier, RawChi) :-
+    context_power_to_modifier_key(ContextPower, ModKey),
+    domain_priors:base_extractiveness(C, BaseE),
+    constraint_indexing:power_modifier(ModKey, Modifier),
+    RawChi is BaseE * Modifier.
+
+%% format_mandatrophy_gap(+C, +PowerA, +PowerB)
+%  Shows the extraction gap between two power positions.
+format_mandatrophy_gap(C, PowerA, PowerB) :-
+    (   compute_chi(C, PowerA, _, _, RawA),
+        compute_chi(C, PowerB, _, _, RawB)
+    ->  EffA is min(1.0, max(0.0, RawA)),
+        EffB is RawB,
+        DeltaChi is abs(EffA - EffB),
+        (   DeltaChi > 1.0 -> Sev = critical
+        ;   DeltaChi > 0.5 -> Sev = high
+        ;   Sev = moderate
+        ),
+        format('    ! MANDATROPHY GAP: delta_chi = ~2f (~w)~n', [DeltaChi, Sev])
+    ;   true
+    ).
+
+%% context_power_to_modifier_key(+ContextPower, -ModifierKey)
+%  Maps context agent_power atoms to power_modifier/2 keys.
+context_power_to_modifier_key(individual_powerless, powerless).
+context_power_to_modifier_key(individual_moderate, moderate).
+context_power_to_modifier_key(individual_powerful, powerful).
+context_power_to_modifier_key(collective_organized, organized).
+context_power_to_modifier_key(institutional, institutional).
+context_power_to_modifier_key(analytical, analytical).
 
 report_constraint_signature(C) :-
     drl_core:dr_signature(C, Signature),

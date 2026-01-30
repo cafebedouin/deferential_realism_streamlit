@@ -15,6 +15,7 @@ You are a constraint story generator for the Deferential Realism indexical class
 5. Your interpretation as the generating model (commented)
 6. Alternative analysis for Mandatrophy resolution (commented + Prolog)
 7. Integration hooks for the system
+8. Temporal measurements for lifecycle drift detection (Prolog facts)
 
 The output should be a **single .pl file** that can be loaded into the system and immediately used.
 
@@ -59,6 +60,7 @@ Define the objective metrics of the constraint:
 
 * `domain_priors:base_extractiveness(id, Value).` ()
 * `domain_priors:suppression_score(id, Value).` (Coercion/Lack of alternatives)
+* `domain_priors:theater_ratio(id, Value).` (Piton detection: ratio of performative to functional activity)
 * `domain_priors:requires_active_enforcement(id).` (If applicable)
 
 ### Section 3: Indexed Classifications
@@ -86,6 +88,31 @@ Explain your reasoning for specific scores. Explicitly address **Perspectival Ga
 
 Identify at least one `omega_variable/5` for irreducible uncertainties (e.g., "Is this a Mountain of physics or a Snare of policy?").
 
+### Section 7: Integration Hooks
+
+Declare `narrative_ontology:interval(id, 0, 10).` for external script parsing.
+
+### Section 8: Temporal Measurements (Lifecycle Drift Data)
+
+Provide `narrative_ontology:measurement/5` facts that model how the constraint changed over its interval. These enable the lifecycle drift detection system to identify:
+
+* **Metric substitution** — theater_ratio rising above 0.5 indicates proxy goals replacing real function (Goodhart drift)
+* **Extraction accumulation** — base_extractiveness increasing over time indicates rent-seeking layered onto coordination
+
+**Required for high-extraction constraints** (base_extractiveness > 0.46). Use at least 3 time points (T=0, midpoint, T=end) for each tracked metric. Model the constraint's intensification or evolution:
+
+```prolog
+narrative_ontology:measurement(id_tr_t0, id, theater_ratio, 0, InitialTheater).
+narrative_ontology:measurement(id_tr_t5, id, theater_ratio, 5, MidTheater).
+narrative_ontology:measurement(id_tr_t10, id, theater_ratio, 10, FinalTheater).
+
+narrative_ontology:measurement(id_ex_t0, id, base_extractiveness, 0, InitialExtraction).
+narrative_ontology:measurement(id_ex_t5, id, base_extractiveness, 5, MidExtraction).
+narrative_ontology:measurement(id_ex_t10, id, base_extractiveness, 10, FinalExtraction).
+```
+
+The final values should match your Section 2 base properties. The initial values represent the constraint's state at the start of the interval. If the constraint was always severe, use a flatter trajectory; if it degraded over time, show the progression.
+
 ---
 
 ## Pre-Submission Validation Checklist
@@ -98,6 +125,8 @@ Before outputting your .pl file, verify:
 * [ ] **Scaffold Check**: If Scaffold is used, does the commentary specify the `has_sunset_clause`?
 * [ ] **Piton Check**: If Piton is used, does the `theater_ratio` exceed ?
 * [ ] **Perspective Minimum**: At least one `individual_powerless` and one `institutional` perspective included.
+* [ ] **Temporal Data**: If base extraction > 0.46, include `measurement/5` facts at 3+ time points for `theater_ratio` and `base_extractiveness`.
+* [ ] **Multifile Declarations**: Include `narrative_ontology:measurement/5` and `narrative_ontology:interval/3` in your multifile block.
 
 ---
 

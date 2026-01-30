@@ -13,12 +13,14 @@
 :- use_module(narrative_ontology).
 
 % --- Namespace Hooks (Required for loading) ---
-:- multifile 
+:- multifile
     domain_priors:base_extractiveness/2,
     domain_priors:suppression_score/2,
     domain_priors:theater_ratio/2,
     domain_priors:requires_active_enforcement/1,
     narrative_ontology:has_sunset_clause/1,
+    narrative_ontology:interval/3,
+    narrative_ontology:measurement/5,
     constraint_indexing:constraint_classification/3.
 
 /* ==========================================================================
@@ -146,7 +148,28 @@ omega_variable(
    ========================================================================== */
 
 % Required for external script parsing
-narrative_ontology:interval([id], 0, 10). 
+narrative_ontology:interval([id], 0, 10).
+
+/* ==========================================================================
+   8. TEMPORAL MEASUREMENTS (LIFECYCLE DRIFT DATA)
+   ========================================================================== */
+
+% Temporal data enables drift detection (metric_substitution,
+% extraction_accumulation) by providing measurements at multiple time points.
+% Model how the constraint intensified or changed across the interval.
+%
+% Required for high-extraction constraints (base_extractiveness > 0.46).
+% Use at least 3 time points (T=0, midpoint, T=end) for each tracked metric.
+%
+% Theater ratio over time (triggers metric_substitution detection):
+narrative_ontology:measurement([id]_tr_t0, [id], theater_ratio, 0, [initial_theater]).
+narrative_ontology:measurement([id]_tr_t5, [id], theater_ratio, 5, [mid_theater]).
+narrative_ontology:measurement([id]_tr_t10, [id], theater_ratio, 10, [final_theater]).
+
+% Extraction over time (triggers extraction_accumulation detection):
+narrative_ontology:measurement([id]_ex_t0, [id], base_extractiveness, 0, [initial_extraction]).
+narrative_ontology:measurement([id]_ex_t5, [id], base_extractiveness, 5, [mid_extraction]).
+narrative_ontology:measurement([id]_ex_t10, [id], base_extractiveness, 10, [final_extraction]).
 
 /* ==========================================================================
    END OF CONSTRAINT STORY
