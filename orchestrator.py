@@ -25,20 +25,42 @@ class DRAuditOrchestrator:
                 return f.read()
         return ""
 
+    def _gemini_call(self, system_instruction, user_content):
+        """Internal helper to handle API calls with rate-limit retries."""
+        max_retries = 5
+        base_delay = 5
+        for attempt in range(max_retries):
+            try:
+                response = self.client.models.generate_content(
+                    model='gemini-2.0-flash',
+                    contents=user_content,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_instruction,
+                        temperature=0.7
+                    )
+                )
+                return response.text
+            except ClientError as e:
+                if e.status_code == 429 and attempt < max_retries - 1:
+                    wait_time = base_delay * (2 ** attempt)
+                    st.warning(f"Rate limit hit. Retrying in {wait_time}s...")
+                    time.sleep(wait_time)
+                    continue
+                raise e
+
     def run_pipeline(self, raw_input, max_retries=2):
-        # Step 1: Substrate Extraction (UKE_D)
+        # Step 1: Substrate Extraction
         substrate = self._gemini_call(self.protocols["uke_d"], f"Extract anchors: {raw_input}")
 
-        # Step 2: Pattern Flagging (UKE_C)
+        # Step 2: Pattern Flagging
         patterns = self._gemini_call(self.protocols["uke_c"], f"Flag patterns: {substrate}")
 
-        # Step 3: Iterative Scenario Generation (.pl)
+        # Step 3: Iterative Scenario Generation
         scenario_pl = None
         current_attempt = 0
         error_feedback = ""
 
         while current_attempt <= max_retries:
-            # Construct the prompt with iterative feedback if needed
             retry_context = f"\n\nPREVIOUS_ERROR:\n{error_feedback}" if error_feedback else ""
             system_msg = f"{self.protocols['gen_prompt']}\n\nLINTER_RULES:\n{self.protocols['linter']}{retry_context}"
 
@@ -50,7 +72,7 @@ class DRAuditOrchestrator:
             # Step 4: The Linter Gate
             linter_errors = self._lint_prolog(scenario_pl)
             if not linter_errors:
-                break # Success
+                break
 
             error_feedback = linter_errors
             current_attempt += 1
@@ -59,10 +81,10 @@ class DRAuditOrchestrator:
         if linter_errors:
             return f"### ❌ Linter Failed after {max_retries} retries\n\n{linter_errors}"
 
-        # Step 5: Logic Audit (Prolog)
+        # Step 5: Logic Audit
         audit_output = self._execute_prolog(scenario_pl)
 
-        # Step 6: Final Synthesis (UKE_W)
+        # Step 6: Final Synthesis
         essay = self._gemini_call(
             system_instruction=self.protocols["uke_w"],
             user_content=f"SUBSTRATE: {substrate}\nAUDIT_LOG: {audit_output}\nSCENARIO_CODE: {scenario_pl}"
@@ -70,56 +92,17 @@ class DRAuditOrchestrator:
         return essay
 
     def _lint_prolog(self, content):
-        """Validates output against structural_linter.py rules."""
         errors = []
         if not re.search(r':- module\(', content):
             errors.append("MISSING_MODULE: Prolog files must begin with :- module(id, []).")
-
-        # Check for mandatory perspektival gaps
         if "agent_power(individual_powerless)" not in content:
             errors.append("MISSING_PERSPECTIVE: Must include agent_power(individual_powerless).")
-
-        # Check for v3.4 category variance
         found_types = set(re.findall(r'constraint_classification\(.*?,[\s\n\r]*(mountain|rope|snare|tangled_rope|scaffold|piton)', content))
         if len(found_types) < 2:
             errors.append(f"INSUFFICIENT_VARIANCE: Found {list(found_types)}. Need 2+ types.")
-
         if "noose" in content.lower():
             errors.append("DEPRECATED_TERM: 'noose' has been replaced by 'snare' in v3.4.")
-
         return "\n".join([f"- {e}" for e in errors]) if errors else None
-
-import time  # Add this at the top of orchestrator.py
-from google.genai.errors import ClientError # Add this at the top
-
-# ... inside DRAuditOrchestrator class ...
-
-def _gemini_call(self, system_instruction, user_content):
-    max_retries = 5
-    base_delay = 5  # Start with a 2-second wait
-
-    for attempt in range(max_retries):
-        try:
-            response = self.client.models.generate_content(
-                model='gemini-2.0-flash',
-                contents=user_content,
-                config=types.GenerateContentConfig(
-                    system_instruction=system_instruction,
-                    temperature=0.7
-                )
-            )
-            return response.text
-
-        except ClientError as e:
-            # Check if the error is a 429 Rate Limit
-            if e.status_code == 429 and attempt < max_retries - 1:
-                wait_time = base_delay * (2 ** attempt)
-                st.warning(f"Rate limit hit. Retrying in {wait_time}s...")
-                time.sleep(wait_time)
-                continue
-            else:
-                # If it's a different error or we ran out of retries, raise it
-                raise e
 
     def _execute_prolog(self, pl_code):
         temp_file = "temp_scenario.pl"
