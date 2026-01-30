@@ -2,8 +2,10 @@ import streamlit as st
 import subprocess
 import os
 import re
+import time
 from google import genai
 from google.genai import types
+from google.genai.errors import ClientError
 
 class DRAuditOrchestrator:
     def __init__(self, api_key):
@@ -87,16 +89,37 @@ class DRAuditOrchestrator:
 
         return "\n".join([f"- {e}" for e in errors]) if errors else None
 
-    def _gemini_call(self, system_instruction, user_content):
-        response = self.client.models.generate_content(
-            model='gemini-2.0-flash',
-            contents=user_content,
-            config=types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                temperature=0.7
+import time  # Add this at the top of orchestrator.py
+from google.genai.errors import ClientError # Add this at the top
+
+# ... inside DRAuditOrchestrator class ...
+
+def _gemini_call(self, system_instruction, user_content):
+    max_retries = 5
+    base_delay = 5  # Start with a 2-second wait
+
+    for attempt in range(max_retries):
+        try:
+            response = self.client.models.generate_content(
+                model='gemini-2.0-flash',
+                contents=user_content,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    temperature=0.7
+                )
             )
-        )
-        return response.text
+            return response.text
+
+        except ClientError as e:
+            # Check if the error is a 429 Rate Limit
+            if e.status_code == 429 and attempt < max_retries - 1:
+                wait_time = base_delay * (2 ** attempt)
+                st.warning(f"Rate limit hit. Retrying in {wait_time}s...")
+                time.sleep(wait_time)
+                continue
+            else:
+                # If it's a different error or we ran out of retries, raise it
+                raise e
 
     def _execute_prolog(self, pl_code):
         temp_file = "temp_scenario.pl"
