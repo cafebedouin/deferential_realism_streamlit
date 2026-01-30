@@ -3,14 +3,17 @@ import subprocess
 import tempfile
 import os
 import re
-from google import genai
+import streamlit as st
+import google.generativeai as genai
 
-client = genai.Client(api_key="API_KEY")
+# 1. Retrieve the key from secrets
+api_key = st.secrets["GEMINI_API_KEY"]
 
-response = client.models.generate_content(
-    model="gemini-3-flash-preview", contents="What is Deferential Realism?"
-)
-print(response.text)
+# 2. Configure the library
+genai.configure(api_key=api_key)
+
+# 3. Initialize the model
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 # --- HELPER: Linter Logic (Derived from structural_linter.py) ---
 def lint_prolog(content):
