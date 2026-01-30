@@ -41,7 +41,7 @@ class DRAuditOrchestrator:
                 )
                 return response.text
             except ClientError as e:
-                # FIX: Change e.status_code to e.code
+                # FIX: In the current SDK, the status code is stored in .code
                 if e.code == 429 and attempt < max_retries - 1:
                     wait_time = base_delay * (2 ** attempt)
                     st.warning(f"Rate limit hit. Retrying in {wait_time}s...")
