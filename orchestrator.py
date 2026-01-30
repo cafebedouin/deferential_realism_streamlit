@@ -41,7 +41,8 @@ class DRAuditOrchestrator:
                 )
                 return response.text
             except ClientError as e:
-                if e.status_code == 429 and attempt < max_retries - 1:
+                # FIX: Change e.status_code to e.code
+                if e.code == 429 and attempt < max_retries - 1:
                     wait_time = base_delay * (2 ** attempt)
                     st.warning(f"Rate limit hit. Retrying in {wait_time}s...")
                     time.sleep(wait_time)
