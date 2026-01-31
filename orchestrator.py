@@ -57,12 +57,12 @@ class DRAuditOrchestrator:
         try:
             cache = self.client.caches.create(
                 model=self.models["architect"],
-                contents=[
-                    types.Content(role="system", parts=[types.Part(text=system_instruction)]),
-                    types.Content(role="user", parts=[types.Part(text=full_context)])
-                ],
                 config=types.CreateCachedContentConfig(
                     display_name="dr_audit_vfinal",
+                    contents=[
+                        types.Content(role="system", parts=[types.Part(text=system_instruction)]),
+                        types.Content(role="user", parts=[types.Part(text=full_context)])
+                    ],
                     ttl="3600s"
                 )
             )
