@@ -82,30 +82,32 @@ class DRAuditOrchestrator:
         max_retries = 5
         base_delay = 2
 
-        cached_content = None
-        current_instruction = system_instruction
-
-        # RULE: 2026 API forbids system_instruction alongside cached_content
-        if st.session_state.cached_content_name and role == "architect":
-            cached_content = st.session_state.cached_content_name
-            current_instruction = None # Crucial fix for the ClientError: 400
-
-        config_args = {
-            "system_instruction": current_instruction,
-            "temperature": 0.7 if role == "essayist" else 0.2
-        }
-        if cached_content:
-            config_args["cached_content"] = cached_content
-        
-        config = types.GenerateContentConfig(**config_args)
-
         for attempt in range(max_retries):
             try:
-                response = self.client.models.generate_content(
-                    model=model_id,
-                    contents=user_content,
-                    config=config
-                )
+                # Fully separate the logic for cached vs. non-cached calls
+                if st.session_state.cached_content_name and role == "architect":
+                    # Use cache, NO system instruction
+                    config = types.GenerateContentConfig(
+                        temperature=0.2, # Architect role uses lower temp
+                        cached_content=st.session_state.cached_content_name
+                    )
+                    response = self.client.models.generate_content(
+                        model=model_id,
+                        contents=user_content,
+                        config=config
+                    )
+                else:
+                    # Normal call with system instruction, NO cache
+                    config = types.GenerateContentConfig(
+                        temperature=0.7 if role == "essayist" else 0.2,
+                        system_instruction=system_instruction
+                    )
+                    response = self.client.models.generate_content(
+                        model=model_id,
+                        contents=user_content,
+                        config=config
+                    )
+
                 return response.text
             except ClientError as e:
                 if e.code == 429 and attempt < max_retries - 1:
