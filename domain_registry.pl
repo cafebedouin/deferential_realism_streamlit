@@ -1,6 +1,7 @@
 :- module(domain_registry, [domain_category/2]).
-% --- AUTOMATICALLY GENERATED DOMAIN REGISTRY v3.3 ---
-% Synchronized with drl_core logic: Snare >= 0.85, Hybrid >= 0.30.
+% --- AUTOMATICALLY GENERATED DOMAIN REGISTRY ---
+% Thresholds aligned with config.pl: Rope <= 0.15, Snare >= 0.46, Tangled Rope 0.16-0.9.
+% Total entries: 613
 
 domain_category(abstraction_boundary_overrun, snare).
 domain_category(abstraction_leakage, snare).
@@ -16,7 +17,7 @@ domain_category(agency_atrophy, snare).
 domain_category(aging_longevity_tests, mountain).
 domain_category(ai_auditability_gap, snare).
 domain_category(ai_cognitive_diversity_arbitrage, snare).
-domain_category(ai_driven_surveillance_sensor_layer, tangled_rope).
+domain_category(ai_driven_surveillance_sensor_layer, snare).
 domain_category(ai_edu_decentralization, rope).
 domain_category(ai_professional_displacement, mountain).
 domain_category(ai_task_horizon_reliability, tangled_rope).
@@ -113,11 +114,11 @@ domain_category(cloudflare_dual_class_asymmetry, snare).
 domain_category(cobra_effect, snare).
 domain_category(cognitive_diversity_arbitrage, rope).
 domain_category(cognitive_energy_budget, snare).
-domain_category(cognitive_induction_gap, tangled_rope).
+domain_category(cognitive_induction_gap, snare).
 domain_category(cognitive_mimicry_arbitrage, rope).
 domain_category(cognitive_surrender_to_system_3, snare).
 domain_category(coinbase_crypto_volatility, mountain).
-domain_category(coinbase_regulatory_uncertainty, tangled_rope).
+domain_category(coinbase_regulatory_uncertainty, snare).
 domain_category(collatz_conjecture_determinism, mountain).
 domain_category(collective_action_deadlock, mountain).
 domain_category(college_admissions_market, rope).
@@ -125,7 +126,7 @@ domain_category(colombia_2026_presidential_election, rope).
 domain_category(colorado_sbe_decentralization_friction, mountain).
 domain_category(comitatus_bond, rope).
 domain_category(complexity_debt, snare).
-domain_category(compounding_logic, tangled_rope).
+domain_category(compounding_logic, snare).
 domain_category(confirmation_bias, snare).
 domain_category(consensus_without_truth, snare).
 domain_category(constitutional_consecration, rope).
@@ -228,7 +229,7 @@ domain_category(france_cordon_sanitaire_2026, snare).
 domain_category(france_local_elections_march_2026, scaffold).
 domain_category(frankenstein_creation_hubris, snare).
 domain_category(fundamental_theorem_of_algebra, mountain).
-domain_category(gale_shapley, tangled_rope).
+domain_category(gale_shapley, snare).
 domain_category(galois_theory_symmetry, mountain).
 domain_category(gamblers_ruin_stochastic_extinction, mountain).
 domain_category(gauss_bonnet_topology, mountain).
@@ -240,7 +241,7 @@ domain_category(gerrymandering_incumbency_2026, snare).
 domain_category(gerty_bloom_voyeuristic_distance, snare).
 domain_category(gestation_the_wombfruit, mountain).
 domain_category(gig_economy_algorithmic_management, snare).
-domain_category(gilgamesh_mortality_limit, mountain).
+domain_category(gilgamesh_mortality_limit, snare).
 domain_category(gita_kurukshetra, tangled_rope).
 domain_category(global_protocol_entrenchment, mountain).
 domain_category(global_stimulus_spree, snare).
@@ -257,7 +258,7 @@ domain_category(gradient_descent_optimization, rope).
 domain_category(graph_coloring_complexity, mountain).
 domain_category(greenland_seizure_trade_war, snare).
 domain_category(greshams_law, mountain).
-domain_category(grete_samsa_transition, tangled_rope).
+domain_category(grete_samsa_transition, snare).
 domain_category(grievance_stack_overflow, snare).
 domain_category(gs1_gln_identification, rope).
 domain_category(gs1_standardized_identification, rope).
@@ -265,7 +266,7 @@ domain_category(halting_problem_undecidability, mountain).
 domain_category(hamiltonian_path_complexity, mountain).
 domain_category(hammurabi_lex_talionis, mountain).
 domain_category(hanlons_razor, tangled_rope).
-domain_category(happiness_of_others, tangled_rope).
+domain_category(happiness_of_others, snare).
 domain_category(harm_principle_liberty, rope).
 domain_category(hawthorne_effect, snare).
 domain_category(hedonic_adaptation_baseline, mountain).
@@ -378,7 +379,7 @@ domain_category(migration_decision_threshold, mountain).
 domain_category(mil_std_461g_emi_control, rope).
 domain_category(mil_std_810f_tailoring, rope).
 domain_category(minimax_decision_rule, mountain).
-domain_category(misunderstanding_as_mismatch, tangled_rope).
+domain_category(misunderstanding_as_mismatch, snare).
 domain_category(model_autonomy_creep, snare).
 domain_category(model_collapse_feedback_loop, snare).
 domain_category(model_of_models_regression, snare).
@@ -398,7 +399,7 @@ domain_category(nash_equilibrium_coordination, mountain).
 domain_category(necessary_day_job, snare).
 domain_category(negative_emissions_arbitrage, rope).
 domain_category(net_zero_stabilization, rope).
-domain_category(network_effects, tangled_rope).
+domain_category(network_effects, snare).
 domain_category(neural_interoperability, snare).
 domain_category(neurodiversity_spectrum, rope).
 domain_category(neuroplasticity_plateau, mountain).
@@ -419,7 +420,7 @@ domain_category(optimization_fragility, snare).
 domain_category(overfitting_to_frameworks, snare).
 domain_category(overton_window, mountain).
 domain_category(p_vs_np, mountain).
-domain_category(parable_fish_turtle, tangled_rope).
+domain_category(parable_fish_turtle, snare).
 domain_category(pareto_principle, mountain).
 domain_category(paris_municipal_reform_2026, rope).
 domain_category(parkinsons_law, mountain).
@@ -427,19 +428,19 @@ domain_category(path_dependence_lock_in, mountain).
 domain_category(peano_curve_mapping, mountain).
 domain_category(permissive_software_licensing, rope).
 domain_category(perovskite_self_etching, snare).
-domain_category(personalized_nutritional_arbitrage, tangled_rope).
+domain_category(personalized_nutritional_arbitrage, snare).
 domain_category(peter_principle, tangled_rope).
 domain_category(planetary_boundaries, mountain).
 domain_category(planetary_diet_constraint_2026, tangled_rope).
 domain_category(planning_fallacy, snare).
 domain_category(platform_cooperativism_governance, rope).
 domain_category(platonic_coparenting, rope).
-domain_category(poetic_verse_and_past, tangled_rope).
+domain_category(poetic_verse_and_past, snare).
 domain_category(poincare_conjecture, mountain).
 domain_category(policy_lag_catastrophe, snare).
-domain_category(politeness_face_negotiation, tangled_rope).
+domain_category(politeness_face_negotiation, snare).
 domain_category(portugal_ad_stability_2026, scaffold).
-domain_category(portugal_polarization_threshold_2026, tangled_rope).
+domain_category(portugal_polarization_threshold_2026, snare).
 domain_category(portuguese_presidential_term_limits, mountain).
 domain_category(postman_survival_protocol, rope).
 domain_category(power_without_responsibility, snare).
@@ -484,7 +485,7 @@ domain_category(robustness_vs_efficiency_tradeoff, snare).
 domain_category(rogers_commission_institutional_analysis, snare).
 domain_category(rope_design, rope).
 domain_category(rosen_bridge_protocol, rope).
-domain_category(rotation_seven_black_soil, rope).
+domain_category(rotation_seven_black_soil, snare).
 domain_category(rotation_seven_isolation, snare).
 domain_category(rotation_seven_kubo_ranking, snare).
 domain_category(royal_navy_middle_east_withdrawal, snare).
@@ -514,7 +515,7 @@ domain_category(skolems_paradox, snare).
 domain_category(sleep_debt_externality, snare).
 domain_category(slow_crisis_invisibility, mountain).
 domain_category(sludge_bureaucratic_friction, snare).
-domain_category(smartphone_ubiquity, tangled_rope).
+domain_category(smartphone_ubiquity, snare).
 domain_category(social_credit_architecture, rope).
 domain_category(social_loafing, snare).
 domain_category(social_media_participation_threshold, snare).
@@ -533,14 +534,14 @@ domain_category(statecraft_virtu, rope).
 domain_category(status_flattening_effect, snare).
 domain_category(steinmetz_valuation_asymmetry, mountain).
 domain_category(stephen_shakespeare_ghost, mountain).
-domain_category(stoic_logos_governance, tangled_rope).
+domain_category(stoic_logos_governance, snare).
 domain_category(strait_coercion_2025, piton).
 domain_category(strange_attractor_dynamics, mountain).
 domain_category(structural_extraction_without_actor, snare).
 domain_category(sts86_ascent_checklist, mountain).
 domain_category(sturgeons_law, mountain).
-domain_category(suanne_coup_of_peace, tangled_rope).
-domain_category(suanne_face_restoration, tangled_rope).
+domain_category(suanne_coup_of_peace, snare).
+domain_category(suanne_face_restoration, snare).
 domain_category(sunk_cost_fallacy, snare).
 domain_category(suslin_hypothesis_undecidability, mountain).
 domain_category(swift_legacy_piton, snare).
@@ -574,7 +575,7 @@ domain_category(the_novelty_gradient, snare).
 domain_category(the_stochastic_snare, snare).
 domain_category(the_viceregal_cavalcade, snare).
 domain_category(the_wall_procedural_barrier, snare).
-domain_category(theory_of_visitors, tangled_rope).
+domain_category(theory_of_visitors, snare).
 domain_category(thermodynamics_entropy, mountain).
 domain_category(three_body_unpredictability, mountain).
 domain_category(threshold_effect_miscalibration, snare).
@@ -598,7 +599,7 @@ domain_category(union_protection_underperformance, rope).
 domain_category(universal_mathematics_communication, mountain).
 domain_category(us_hydrological_debt, snare).
 domain_category(us_suburban_zoning_2025, snare).
-domain_category(us_two_party_duopoly, tangled_rope).
+domain_category(us_two_party_duopoly, snare).
 domain_category(utopia_apocalypse_fragility, mountain).
 domain_category(value_alignment_drift, snare).
 domain_category(value_extraction_plateau, snare).
@@ -614,4 +615,4 @@ domain_category(wikipedia_crowdsourcing_2026, rope).
 domain_category(wikipedia_notability_requirement_2026, mountain).
 domain_category(winners_curse, mountain).
 domain_category(xi_mao_ideological_centralization, mountain).
-domain_category(zipfs_law, tangled_rope).
+domain_category(zipfs_law, snare).

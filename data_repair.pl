@@ -91,6 +91,7 @@ bridge_v34_data(IntervalID) :-
     % Metrics must be bridged FIRST because bridge_constraint_claim
     % uses drl_core:dr_type/2 which queries constraint_metric/3.
     bridge_domain_metrics(IntervalID),
+    bridge_beneficiary_victim(IntervalID),
     bridge_constraint_claim(IntervalID),
     bridge_omega_variables(IntervalID).
 
@@ -165,4 +166,48 @@ bridge_omega_variables(IntervalID) :-
                 format('  [BRIDGE] Imported omega ~w from module ~w~n', [OID3, IntervalID])
             ))
     ;   true
+    ).
+
+/* ============================================================
+   V3.4 BENEFICIARY/VICTIM BRIDGE
+
+   Tangled Rope detection via drl_core:is_tangled_rope/3
+   requires has_coordination_function/1 (needs constraint_beneficiary/2)
+   and has_asymmetric_extraction/1 (needs constraint_victim/2).
+
+   Most v3.4 testsets don't declare these. When a constraint has
+   high extraction (> 0.46) AND high suppression (> 0.40), it
+   structurally implies both a beneficiary and a victim exist.
+   This bridge asserts synthetic beneficiary/victim facts so the
+   tangled rope gate can fire on metric-qualifying constraints.
+   ============================================================ */
+
+%% bridge_beneficiary_victim(+IntervalID)
+%  Auto-derives constraint_beneficiary/2 and constraint_victim/2
+%  for high-extraction, high-suppression constraints that lack them.
+bridge_beneficiary_victim(IntervalID) :-
+    % Only act if both facts are missing
+    (   narrative_ontology:constraint_beneficiary(IntervalID, _)
+    ->  true  % Already has beneficiary
+    ;   (   resolve_domain_prior(base_extractiveness, IntervalID, E),
+            E > 0.46,
+            resolve_domain_prior(suppression_score, IntervalID, S),
+            S > 0.40
+        ->  assertz(narrative_ontology:constraint_beneficiary(IntervalID, inferred_institutional)),
+            format('  [BRIDGE] Derived constraint_beneficiary(~w, inferred_institutional) from metrics (E=~2f, S=~2f)~n',
+                   [IntervalID, E, S])
+        ;   true
+        )
+    ),
+    (   narrative_ontology:constraint_victim(IntervalID, _)
+    ->  true  % Already has victim
+    ;   (   resolve_domain_prior(base_extractiveness, IntervalID, E2),
+            E2 > 0.46,
+            resolve_domain_prior(suppression_score, IntervalID, S2),
+            S2 > 0.40
+        ->  assertz(narrative_ontology:constraint_victim(IntervalID, inferred_subject)),
+            format('  [BRIDGE] Derived constraint_victim(~w, inferred_subject) from metrics (E=~2f, S=~2f)~n',
+                   [IntervalID, E2, S2])
+        ;   true
+        )
     ).
