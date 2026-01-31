@@ -90,16 +90,21 @@ class DRAuditOrchestrator:
             cached_content = st.session_state.cached_content_name
             current_instruction = None # Crucial fix for the ClientError: 400
 
+        config_args = {
+            "system_instruction": current_instruction,
+            "temperature": 0.7 if role == "essayist" else 0.2
+        }
+        if cached_content:
+            config_args["cached_content"] = cached_content
+        
+        config = types.GenerateContentConfig(**config_args)
+
         for attempt in range(max_retries):
             try:
                 response = self.client.models.generate_content(
                     model=model_id,
                     contents=user_content,
-                    config=types.GenerateContentConfig(
-                        system_instruction=current_instruction,
-                        cached_content=cached_content,
-                        temperature=0.7 if role == "essayist" else 0.2
-                    )
+                    config=config
                 )
                 return response.text
             except ClientError as e:
