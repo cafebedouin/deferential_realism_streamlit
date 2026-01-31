@@ -24,6 +24,16 @@ class DRAuditOrchestrator:
             "template": self._load_asset("constraint_story_template.pl"),
             "linter": self._load_asset("structural_linter.py")
         }
+        
+        # Force-clear any potentially stale caches on startup
+        try:
+            for cache in self.client.caches.list():
+                if "dr_audit" in cache.display_name:
+                    self.client.caches.delete(name=cache.name)
+                    st.sidebar.warning(f"Cleared stale cache: {cache.display_name}")
+        except Exception as e:
+            st.sidebar.error(f"Cache clearing failed: {e}")
+
         # Initialize Cache State
         if "cached_content_name" not in st.session_state:
             self._create_context_cache()
@@ -47,8 +57,10 @@ class DRAuditOrchestrator:
         try:
             cache = self.client.caches.create(
                 model=self.models["architect"],
-                system_instruction=system_instruction,
-                contents=[types.Content(role="user", parts=[types.Part(text=full_context)])],
+                contents=[
+                    types.Content(role="system", parts=[types.Part(text=system_instruction)]),
+                    types.Content(role="user", parts=[types.Part(text=full_context)])
+                ],
                 config=types.CreateCachedContentConfig(
                     display_name="dr_audit_vfinal",
                     ttl="3600s"
