@@ -46,23 +46,22 @@ class DRAuditOrchestrator:
 
     def _create_context_cache(self):
         """Bakes protocols and the generation mission into a static cache."""
-        system_instruction = self.protocols['gen_prompt']
+        # Embed mission here to avoid instruction conflict later
         full_context = f"""
         UKE_D PROTOCOL: {self.protocols['uke_d']}
         UKE_C PROTOCOL: {self.protocols['uke_c']}
         UKE_W PROTOCOL: {self.protocols['uke_w']}
         LINTER RULES: {self.protocols['linter']}
+        MISSION: {self.protocols['gen_prompt']}
         """
 
         try:
+            # For older APIs, all content must be in the 'user' role within the config.
             cache = self.client.caches.create(
                 model=self.models["architect"],
                 config=types.CreateCachedContentConfig(
                     display_name="dr_audit_vfinal",
-                    contents=[
-                        types.Content(role="system", parts=[types.Part(text=system_instruction)]),
-                        types.Content(role="user", parts=[types.Part(text=full_context)])
-                    ],
+                    contents=[types.Content(role="user", parts=[types.Part(text=full_context)])],
                     ttl="3600s"
                 )
             )
