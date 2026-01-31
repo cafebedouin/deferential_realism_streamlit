@@ -36,22 +36,21 @@ class DRAuditOrchestrator:
 
     def _create_context_cache(self):
         """Bakes protocols and the generation mission into a static cache."""
-        # Embed mission here to avoid instruction conflict later
+        system_instruction = self.protocols['gen_prompt']
         full_context = f"""
         UKE_D PROTOCOL: {self.protocols['uke_d']}
         UKE_C PROTOCOL: {self.protocols['uke_c']}
         UKE_W PROTOCOL: {self.protocols['uke_w']}
         LINTER RULES: {self.protocols['linter']}
-        MISSION: {self.protocols['gen_prompt']}
         """
 
         try:
-            # 2026 Requirement: Cache turns require role='user'
             cache = self.client.caches.create(
                 model=self.models["architect"],
+                system_instruction=system_instruction,
+                contents=[types.Content(role="user", parts=[types.Part(text=full_context)])],
                 config=types.CreateCachedContentConfig(
                     display_name="dr_audit_vfinal",
-                    contents=[types.Content(role="user", parts=[types.Part(text=full_context)])],
                     ttl="3600s"
                 )
             )
@@ -125,11 +124,11 @@ class DRAuditOrchestrator:
         while current_attempt <= max_retries:
             retry_context = f"\n\nPREVIOUS_ERROR:\n{error_feedback}" if error_feedback else ""
             # The gen_prompt is now in the cache, but we pass it as a safety backup for non-cached calls
-            system_msg = f"{self.protocols['gen_prompt']}\n{retry_context}"
+            system_msg = self.protocols['gen_prompt']
 
             scenario_pl = self._gemini_call(
                 system_instruction=system_msg,
-                user_content=f"Generate .pl using patterns.\nPATTERNS: {patterns}\nTEMPLATE:\n{self.protocols['template']}",
+                user_content=f"Generate .pl using patterns.{retry_context}\nPATTERNS: {patterns}\nTEMPLATE:\n{self.protocols['template']}",
                 role="architect"
             )
 
