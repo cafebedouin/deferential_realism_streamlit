@@ -10,11 +10,11 @@ from google.genai.errors import ClientError
 class DRAuditOrchestrator:
     def __init__(self, api_key):
         self.client = genai.Client(api_key=api_key)
-        # 2026 Tier 1 Model Routing
+        # 2026 Model Routing for Tier 1 Reliability
         self.models = {
-            "janitor": "gemini-2.0-flash-lite",
-            "architect": "gemini-2.0-flash",
-            "essayist": "gemini-2.5-pro"
+            "janitor": "gemini-2.0-flash-lite", # High TPM for cleaning/extraction
+            "architect": "gemini-2.0-flash",     # Balanced for logic
+            "essayist": "gemini-2.5-pro"         # Maximum reasoning for synthesis
         }
         self.protocols = {
             "uke_d": self._load_asset("uke_d.md"),
@@ -35,8 +35,8 @@ class DRAuditOrchestrator:
         return ""
 
     def _create_context_cache(self):
-        """Creates a cache of protocols and the generation mission."""
-        # Embed mission in cache to avoid instruction conflict at call-time
+        """Bakes protocols and the generation mission into a static cache."""
+        # Embed mission here to avoid instruction conflict later
         full_context = f"""
         UKE_D PROTOCOL: {self.protocols['uke_d']}
         UKE_C PROTOCOL: {self.protocols['uke_c']}
@@ -46,7 +46,7 @@ class DRAuditOrchestrator:
         """
 
         try:
-            # 2026 SDK requires role='user' for cached turns
+            # 2026 Requirement: Cache turns require role='user'
             cache = self.client.caches.create(
                 model=self.models["architect"],
                 config=types.CreateCachedContentConfig(
@@ -58,11 +58,11 @@ class DRAuditOrchestrator:
             st.session_state.cached_content_name = cache.name
             st.sidebar.success("Context Cache Initialized.")
         except Exception as e:
-            st.sidebar.error(f"Cache Failed: {e}")
+            st.sidebar.error(f"Cache Initialization Failed: {e}")
             st.session_state.cached_content_name = None
 
     def get_cache_status(self):
-        """Retrieves remaining TTL for the session cache."""
+        """Retrieves remaining TTL for the sidebar indicator."""
         if not st.session_state.get("cached_content_name"):
             return None
         try:
@@ -78,7 +78,7 @@ class DRAuditOrchestrator:
         self._create_context_cache()
 
     def _gemini_call(self, system_instruction, user_content, role="architect"):
-        """Handles role selection and instruction-cache decoupling."""
+        """Decouples system_instruction when cache is present to avoid 400 error."""
         model_id = self.models.get(role, self.models["architect"])
         max_retries = 5
         base_delay = 2
@@ -86,10 +86,10 @@ class DRAuditOrchestrator:
         cached_content = None
         current_instruction = system_instruction
 
-        # RULE: 2026 API forbids system_instruction with cached_content
+        # RULE: 2026 API forbids system_instruction alongside cached_content
         if st.session_state.cached_content_name and role == "architect":
             cached_content = st.session_state.cached_content_name
-            current_instruction = None # Crucial fix for the 400 error
+            current_instruction = None # Crucial fix for the ClientError: 400
 
         for attempt in range(max_retries):
             try:
@@ -112,7 +112,7 @@ class DRAuditOrchestrator:
                 raise e
 
     def run_pipeline(self, raw_input, max_retries=2):
-        # 1. Extraction (Janitor - High Token Throughput)
+        # 1. Extraction (Janitor)
         substrate = self._gemini_call(self.protocols["uke_d"], f"Extract anchors: {raw_input}", role="janitor")
 
         # 2. Flagging (Janitor)
@@ -124,6 +124,7 @@ class DRAuditOrchestrator:
         error_feedback = ""
         while current_attempt <= max_retries:
             retry_context = f"\n\nPREVIOUS_ERROR:\n{error_feedback}" if error_feedback else ""
+            # The gen_prompt is now in the cache, but we pass it as a safety backup for non-cached calls
             system_msg = f"{self.protocols['gen_prompt']}\n{retry_context}"
 
             scenario_pl = self._gemini_call(
@@ -159,7 +160,7 @@ class DRAuditOrchestrator:
             errors.append("MISSING_PERSPECTIVE: Must include agent_power(individual_powerless).")
         found_types = set(re.findall(r'constraint_classification\(.*?,[\s\n\r]*(mountain|rope|snare|tangled_rope|scaffold|piton)', content))
         if len(found_types) < 2:
-            errors.append(f"INSUFFICIENT_VARIANCE: Need 2+ types.")
+            errors.append(f"INSUFFICIENT_VARIANCE: Found {list(found_types)}. Need 2+ types.")
         return "\n".join([f"- {e}" for e in errors]) if errors else None
 
     def _execute_prolog(self, pl_code):
