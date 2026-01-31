@@ -36,7 +36,7 @@ class DRAuditOrchestrator:
 
     def _create_context_cache(self):
         """Creates a cache of protocols and the generation mission."""
-        # We move the mission into the cache to avoid the instruction conflict
+        # Embed mission in cache to avoid instruction conflict at call-time
         full_context = f"""
         UKE_D PROTOCOL: {self.protocols['uke_d']}
         UKE_C PROTOCOL: {self.protocols['uke_c']}
@@ -46,22 +46,39 @@ class DRAuditOrchestrator:
         """
 
         try:
+            # 2026 SDK requires role='user' for cached turns
             cache = self.client.caches.create(
                 model=self.models["architect"],
                 config=types.CreateCachedContentConfig(
-                    display_name="dr_audit_v3",
+                    display_name="dr_audit_vfinal",
                     contents=[types.Content(role="user", parts=[types.Part(text=full_context)])],
                     ttl="3600s"
                 )
             )
             st.session_state.cached_content_name = cache.name
-            st.success("Context Cache v3 Initialized.")
+            st.sidebar.success("Context Cache Initialized.")
         except Exception as e:
-            st.error(f"Cache Initialization Failed: {e}")
+            st.sidebar.error(f"Cache Failed: {e}")
             st.session_state.cached_content_name = None
 
+    def get_cache_status(self):
+        """Retrieves remaining TTL for the session cache."""
+        if not st.session_state.get("cached_content_name"):
+            return None
+        try:
+            cache_info = self.client.caches.get(name=st.session_state.cached_content_name)
+            return cache_info.expire_time
+        except Exception:
+            st.session_state.cached_content_name = None
+            return None
+
+    def refresh_cache(self):
+        """Forces a manual cache re-upload."""
+        st.session_state.cached_content_name = None
+        self._create_context_cache()
+
     def _gemini_call(self, system_instruction, user_content, role="architect"):
-        """Handles role selection and decouples instructions from cache."""
+        """Handles role selection and instruction-cache decoupling."""
         model_id = self.models.get(role, self.models["architect"])
         max_retries = 5
         base_delay = 2
@@ -72,7 +89,7 @@ class DRAuditOrchestrator:
         # RULE: 2026 API forbids system_instruction with cached_content
         if st.session_state.cached_content_name and role == "architect":
             cached_content = st.session_state.cached_content_name
-            current_instruction = None # Prevents the 400 error
+            current_instruction = None # Crucial fix for the 400 error
 
         for attempt in range(max_retries):
             try:
@@ -94,19 +111,8 @@ class DRAuditOrchestrator:
                     continue
                 raise e
 
-    def get_cache_status(self):
-        """Retrieves remaining TTL for the session cache."""
-        if not st.session_state.get("cached_content_name"):
-            return None
-        try:
-            cache_info = self.client.caches.get(name=st.session_state.cached_content_name)
-            return cache_info.expire_time
-        except Exception:
-            st.session_state.cached_content_name = None
-            return None
-
     def run_pipeline(self, raw_input, max_retries=2):
-        # 1. Extraction (Janitor)
+        # 1. Extraction (Janitor - High Token Throughput)
         substrate = self._gemini_call(self.protocols["uke_d"], f"Extract anchors: {raw_input}", role="janitor")
 
         # 2. Flagging (Janitor)
