@@ -44,18 +44,22 @@ class DRAuditOrchestrator:
         """
 
         try:
-            # In 2026, caches require a 'ttl' or 'expire_time'
-            # We set this to 1 hour (3600 seconds) for a typical session
+            # FIX: 2026 SDK requires 'role' to be set in CachedContent
             cache = self.client.caches.create(
                 model=self.models["architect"],
                 config=types.CreateCachedContentConfig(
                     display_name="dr_audit_protocols",
-                    contents=[types.Content(parts=[types.Part(text=full_context)])],
+                    contents=[
+                        types.Content(
+                            role="user", # This line fixes the 400 error
+                            parts=[types.Part(text=full_context)]
+                        )
+                    ],
                     ttl="3600s"
                 )
             )
             st.session_state.cached_content_name = cache.name
-            st.success("Context Cache Initialized: Billable tokens reduced by ~80%.")
+            st.success("Context Cache Initialized: Protocol overhead reduced.")
         except Exception as e:
             st.error(f"Failed to create cache: {e}. Falling back to standard calls.")
             st.session_state.cached_content_name = None
